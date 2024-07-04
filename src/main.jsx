@@ -1,14 +1,9 @@
 import { createRoot } from 'react-dom'
-import './index.css'
+import App from './App'
+import './styles/index.css'
 
-const app = (
-	<>
-		<div></div>
-	</>
-)
-
-console.log(app)
+console.log(<App />)
 
 const container = document.getElementById('root')
 
-createRoot(container).render(app)
+createRoot(container).render(<App />)
