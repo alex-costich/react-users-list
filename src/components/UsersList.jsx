@@ -1,34 +1,81 @@
 import { useState } from 'react'
-import UserRow from './UserRow.jsx'
 import UsersFiltered from './UsersFiltered.jsx'
 import style from './UsersList.module.css'
+import UsersListRows from './UsersListRows.jsx'
 
-const UsersList = ({ users }) => {
-	const [search, setSearch] = useState('')
-	const [onlyActive, setOnlyActive] = useState(false)
-	const [sortBy, setSortBy] = useState(0)
+const UsersList = ({ initialUsers }) => {
+	const { search, onlyActive, sortBy, ...setFiltersFunctions } = useGetState()
+	const { users, toggleUserActive } = useUsers(initialUsers)
 
 	let usersFiltered = filterUsersByName(users, search)
 	usersFiltered = filterActiveUsers(usersFiltered, onlyActive)
 	usersFiltered = sortUsers(usersFiltered, sortBy)
-	const usersRendered = renderUsers(usersFiltered)
 
 	return (
 		<div className={style.wrapper}>
 			<h1>Listado de usuarios</h1>
 			<UsersFiltered
-				{...{
-					search,
-					setSearch,
-					onlyActive,
-					setOnlyActive,
-					sortBy,
-					setSortBy
-				}}
+				search={search}
+				onlyActive={onlyActive}
+				sortBy={sortBy}
+				{...setFiltersFunctions}
 			/>
-			{usersRendered}
+			<UsersListRows
+				users={usersFiltered}
+				toggleUserActive={toggleUserActive}
+			/>
 		</div>
 	)
+}
+
+const useGetState = () => {
+	const [filters, setFilters] = useState({
+		search: '',
+		onlyActive: false,
+		sortBy: 0
+	})
+
+	const setSearch = search =>
+		setFilters({
+			...filters,
+			search
+		})
+
+	const setOnlyActive = onlyActive =>
+		setFilters({
+			...filters,
+			onlyActive
+		})
+
+	const setSortBy = sortBy =>
+		setFilters({
+			...filters,
+			sortBy
+		})
+
+	return {
+		...filters,
+		setSearch,
+		setOnlyActive,
+		setSortBy
+	}
+}
+
+const useUsers = initialUsers => {
+	const [users, setUsers] = useState(initialUsers)
+
+	const toggleUserActive = userId => {
+		const newUsers = [...users]
+
+		const userIndex = newUsers.findIndex(user => user.id === userId)
+		if (userIndex === -1) return
+
+		newUsers[userIndex].active = !newUsers[userIndex].active
+
+		setUsers(newUsers)
+	}
+
+	return { users, toggleUserActive }
 }
 
 const filterUsersByName = (users, search) => {
@@ -60,12 +107,6 @@ const sortUsers = (users, sortBy) => {
 		default:
 			return sortedUsers
 	}
-}
-
-const renderUsers = users => {
-	if (users.length <= 0) return <p>No hay usuarios</p>
-
-	return users.map(user => <UserRow key={user.name} {...user} />)
 }
 
 export default UsersList
